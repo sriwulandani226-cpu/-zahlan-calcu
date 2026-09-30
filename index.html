@@ -7,50 +7,60 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="calculator" role="application" aria-label="Kalkulator">
+    <main class="calculator" role="application" aria-label="Kalkulator ilmiah">
       <h1 class="calculator__title">Kalkulator</h1>
 
       <section class="history" aria-label="Riwayat perhitungan">
-        <ol id="history" class="history__list" reversed></ol>
         <p id="history-empty" class="history__empty">Belum ada riwayat</p>
+        <ol id="history" class="history__list" reversed></ol>
         <button type="button" id="history-clear" class="history__clear" hidden>
-          Hapus riwayat
+          Hapus
         </button>
       </section>
 
-      <output id="display" class="display" aria-live="polite">0</output>
-      <p id="subdisplay" class="subdisplay" aria-hidden="true"></p>
+      <div class="readout">
+        <span id="mem-indicator" class="readout__mem" hidden>M</span>
+        <div class="readout__stack">
+          <p id="subdisplay" class="subdisplay" aria-hidden="true"></p>
+          <output id="display" class="display" aria-live="polite">0</output>
+        </div>
+      </div>
+
+      <div class="memory" role="group" aria-label="Memori">
+        <button type="button" class="key key--mem" data-action="memory-clear">MC</button>
+        <button type="button" class="key key--mem" data-action="memory-recall">MR</button>
+        <button type="button" class="key key--mem" data-action="memory-add">M+</button>
+        <button type="button" class="key key--mem" data-action="memory-sub">M−</button>
+      </div>
 
       <div class="keypad">
-        <button type="button" class="key key--fn" data-action="clear">AC</button>
         <button
           type="button"
-          class="key key--fn"
-          data-action="backspace"
-          aria-label="Hapus satu angka"
+          class="key key--sci"
+          data-action="unary"
+          data-value="sqrt"
+          aria-label="Akar kuadrat"
         >
-          DEL
+          &radic;
         </button>
         <button
           type="button"
-          class="key key--fn"
-          data-action="sign"
-          aria-label="Ubah tanda"
+          class="key key--sci"
+          data-action="unary"
+          data-value="square"
+          aria-label="Pangkat dua"
         >
-          +/-
+          x<sup>2</sup>
         </button>
         <button
           type="button"
-          class="key key--fn"
-          data-action="percent"
-          aria-label="Persen"
+          class="key key--sci"
+          data-action="operator"
+          data-value="**"
+          aria-label="Pangkat"
         >
-          %
+          x<sup>y</sup>
         </button>
-
-        <button type="button" class="key" data-action="digit" data-value="7">7</button>
-        <button type="button" class="key" data-action="digit" data-value="8">8</button>
-        <button type="button" class="key" data-action="digit" data-value="9">9</button>
         <button
           type="button"
           class="key key--op"
@@ -61,9 +71,33 @@
           &divide;
         </button>
 
-        <button type="button" class="key" data-action="digit" data-value="4">4</button>
-        <button type="button" class="key" data-action="digit" data-value="5">5</button>
-        <button type="button" class="key" data-action="digit" data-value="6">6</button>
+        <button
+          type="button"
+          class="key key--sci"
+          data-action="unary"
+          data-value="sin"
+          aria-label="Sinus (derajat)"
+        >
+          sin
+        </button>
+        <button
+          type="button"
+          class="key key--sci"
+          data-action="unary"
+          data-value="cos"
+          aria-label="Cosinus (derajat)"
+        >
+          cos
+        </button>
+        <button
+          type="button"
+          class="key key--sci"
+          data-action="unary"
+          data-value="tan"
+          aria-label="Tangens (derajat)"
+        >
+          tan
+        </button>
         <button
           type="button"
           class="key key--op"
@@ -74,9 +108,32 @@
           &times;
         </button>
 
-        <button type="button" class="key" data-action="digit" data-value="1">1</button>
-        <button type="button" class="key" data-action="digit" data-value="2">2</button>
-        <button type="button" class="key" data-action="digit" data-value="3">3</button>
+        <button
+          type="button"
+          class="key key--sci"
+          data-action="unary"
+          data-value="log10"
+          aria-label="Logaritma basis 10"
+        >
+          log
+        </button>
+        <button
+          type="button"
+          class="key key--sci"
+          data-action="unary"
+          data-value="ln"
+          aria-label="Logaritma natural"
+        >
+          ln
+        </button>
+        <button
+          type="button"
+          class="key key--fn"
+          data-action="percent"
+          aria-label="Persen"
+        >
+          %
+        </button>
         <button
           type="button"
           class="key key--op"
@@ -85,6 +142,53 @@
           aria-label="Kurang"
         >
           &minus;
+        </button>
+
+        <button type="button" class="key" data-action="digit" data-value="7">7</button>
+        <button type="button" class="key" data-action="digit" data-value="8">8</button>
+        <button type="button" class="key" data-action="digit" data-value="9">9</button>
+        <button
+          type="button"
+          class="key key--op"
+          data-action="operator"
+          data-value="+"
+          aria-label="Tambah"
+        >
+          +
+        </button>
+
+        <button type="button" class="key" data-action="digit" data-value="4">4</button>
+        <button type="button" class="key" data-action="digit" data-value="5">5</button>
+        <button type="button" class="key" data-action="digit" data-value="6">6</button>
+        <button
+          type="button"
+          class="key key--eq"
+          data-action="equals"
+          aria-label="Sama dengan"
+        >
+          =
+        </button>
+
+        <button type="button" class="key" data-action="digit" data-value="1">1</button>
+        <button type="button" class="key" data-action="digit" data-value="2">2</button>
+        <button type="button" class="key" data-action="digit" data-value="3">3</button>
+
+        <button type="button" class="key key--fn" data-action="clear">AC</button>
+        <button
+          type="button"
+          class="key key--fn"
+          data-action="sign"
+          aria-label="Ubah tanda"
+        >
+          +/−
+        </button>
+        <button
+          type="button"
+          class="key key--fn"
+          data-action="backspace"
+          aria-label="Hapus satu angka"
+        >
+          DEL
         </button>
 
         <button type="button" class="key key--zero" data-action="digit" data-value="0">
@@ -98,30 +202,15 @@
         >
           .
         </button>
-        <button
-          type="button"
-          class="key key--op"
-          data-action="operator"
-          data-value="+"
-          aria-label="Tambah"
-        >
-          +
-        </button>
-
-        <button
-          type="button"
-          class="key key--eq"
-          data-action="equals"
-          aria-label="Sama dengan"
-        >
-          =
-        </button>
       </div>
 
       <p class="hint">
-        Keyboard: angka, <kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd>,
-        <kbd>%</kbd> <kbd>.</kbd> &rarr; Enter &middot; <kbd>Backspace</kbd> &middot;
-        <kbd>Esc</kbd>
+        <span>sin/cos/tan memakai derajat &middot; klik riwayat untuk memakai ulang</span>
+        <span
+          >Keyboard: angka, <kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd>,
+          <kbd>%</kbd> <kbd>.</kbd> &rarr; Enter &middot; <kbd>Backspace</kbd> &middot;
+          <kbd>Esc</kbd></span
+        >
       </p>
     </main>
 

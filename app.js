@@ -1,5 +1,6 @@
 const display = document.getElementById("display");
 const subdisplay = document.getElementById("subdisplay");
+const memIndicator = document.getElementById("mem-indicator");
 const historyList = document.getElementById("history");
 const historyEmpty = document.getElementById("history-empty");
 const historyClear = document.getElementById("history-clear");
@@ -13,16 +14,33 @@ const state = {
   previous: null,
   operator: null,
   overwriteNext: false,
+  memory: 0,
 };
 
 const history = [];
 
-const OPERATOR_SYMBOL = { "+": "+", "-": "−", "*": "×", "/": "÷" };
+const OPERATOR_SYMBOL = {
+  "+": "+",
+  "-": "−",
+  "*": "×",
+  "/": "÷",
+  "**": "^(y)",
+};
+
+const UNARY_SYMBOL = {
+  sqrt: "√",
+  square: "x²",
+  sin: "sin",
+  cos: "cos",
+  tan: "tan",
+  log10: "log",
+  ln: "ln",
+};
 
 function format(value) {
   const num = Number(value);
   if (!Number.isFinite(num)) return "Error";
-  if (Math.abs(num) >= 1e15 || (Math.abs(num) < 1e-9 && num !== 0)) {
+  if (num !== 0 && (Math.abs(num) >= 1e15 || Math.abs(num) < 1e-9)) {
     return num.toExponential(6);
   }
   return String(Number(parseFloat(value).toFixed(10)));
@@ -31,6 +49,7 @@ function format(value) {
 function render() {
   display.textContent = state.current;
   display.classList.toggle("display--error", state.current === "Error");
+  memIndicator.hidden = state.memory === 0;
 
   if (state.operator && state.previous !== null) {
     subdisplay.textContent = `${state.previous} ${OPERATOR_SYMBOL[state.operator]}`;
@@ -46,7 +65,10 @@ function renderHistory() {
 
   for (const entry of history) {
     const item = document.createElement("li");
-    item.className = "history__item";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "history__item";
+    button.dataset.value = entry.result;
 
     const expression = document.createElement("span");
     expression.textContent = entry.expression;
@@ -54,7 +76,8 @@ function renderHistory() {
     const result = document.createElement("b");
     result.textContent = `= ${entry.result}`;
 
-    item.append(expression, result);
+    button.append(expression, result);
+    item.append(button);
     historyList.append(item);
   }
 }
@@ -83,6 +106,9 @@ function calculate() {
     case "/":
       if (b === 0) return "Error";
       result = a / b;
+      break;
+    case "**":
+      result = Math.pow(a, b);
       break;
     default:
       return state.current;
@@ -166,6 +192,75 @@ function inputEquals() {
   addToHistory(expression, result);
 }
 
+function inputUnary(fn) {
+  if (state.current === "Error") return;
+
+  const x = parseFloat(state.current);
+  const toRad = (deg) => (deg * Math.PI) / 180;
+
+  let result;
+  switch (fn) {
+    case "sqrt":
+      if (x < 0) result = NaN;
+      else result = Math.sqrt(x);
+      break;
+    case "square":
+      result = x * x;
+      break;
+    case "sin":
+      result = Math.sin(toRad(x));
+      break;
+    case "cos":
+      result = Math.cos(toRad(x));
+      break;
+    case "tan":
+      result = Math.tan(toRad(x));
+      break;
+    case "log10":
+      result = x > 0 ? Math.log10(x) : NaN;
+      break;
+    case "ln":
+      result = x > 0 ? Math.log(x) : NaN;
+      break;
+    default:
+      return;
+  }
+
+  if (Number.isFinite(result)) {
+    addToHistory(`${UNARY_SYMBOL[fn]}(${state.current})`, format(result));
+  }
+
+  state.current = Number.isFinite(result) ? format(result) : "Error";
+  state.overwriteNext = true;
+}
+
+function inputMemory(action) {
+  if (action === "memory-clear") {
+    state.memory = 0;
+    return;
+  }
+  if (action === "memory-recall") {
+    if (state.memory === 0) return;
+    state.current = format(state.memory);
+    state.overwriteNext = true;
+    return;
+  }
+
+  if (state.current === "Error") return;
+  const delta = parseFloat(state.current);
+  state.memory =
+    action === "memory-add" ? state.memory + delta : state.memory - delta;
+  state.overwriteNext = true;
+}
+
+function useHistoryValue(value) {
+  if (value === "Error") return;
+  state.current = value;
+  state.previous = null;
+  state.operator = null;
+  state.overwriteNext = true;
+}
+
 function clearAll() {
   state.current = "0";
   state.previous = null;
@@ -187,6 +282,11 @@ const ACTIONS = {
   clear: clearAll,
   operator: (el) => inputOperator(el.dataset.value),
   equals: inputEquals,
+  unary: (el) => inputUnary(el.dataset.value),
+  "memory-clear": () => inputMemory("memory-clear"),
+  "memory-recall": () => inputMemory("memory-recall"),
+  "memory-add": () => inputMemory("memory-add"),
+  "memory-sub": () => inputMemory("memory-sub"),
 };
 
 function press(action, el) {
@@ -198,6 +298,13 @@ keys.forEach((key) => {
   key.addEventListener("click", () => press(key.dataset.action, key));
 });
 
+historyList.addEventListener("click", (event) => {
+  const item = event.target.closest(".history__item");
+  if (!item) return;
+  useHistoryValue(item.dataset.value);
+  render();
+});
+
 historyClear.addEventListener("click", clearHistory);
 
 const KEYBOARD_MAP = {
@@ -207,14 +314,19 @@ const KEYBOARD_MAP = {
   x: { action: "operator", value: "*" },
   X: { action: "operator", value: "*" },
   "/": { action: "operator", value: "/" },
+  "^": { action: "operator", value: "**" },
   ".": { action: "dot" },
   ",": { action: "dot" },
   "%": { action: "percent" },
+  r: { action: "unary", value: "sqrt" },
+  s: { action: "unary", value: "sin" },
+  c: { action: "unary", value: "cos" },
+  t: { action: "unary", value: "tan" },
+  g: { action: "unary", value: "log10" },
+  l: { action: "unary", value: "ln" },
   Enter: { action: "equals" },
   "=": { action: "equals" },
   Escape: { action: "clear" },
-  c: { action: "clear" },
-  C: { action: "clear" },
   Backspace: { action: "backspace" },
 };
 
