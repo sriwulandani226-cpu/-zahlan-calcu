@@ -1,347 +1,314 @@
-const display = document.getElementById("display");
-const subdisplay = document.getElementById("subdisplay");
-const memIndicator = document.getElementById("mem-indicator");
-const historyList = document.getElementById("history");
-const historyEmpty = document.getElementById("history-empty");
-const historyClear = document.getElementById("history-clear");
-const keys = document.querySelectorAll(".key");
+/**
+ * Space Calculator — Mission Control
+ * Kalkulator dasar dengan antarmuka luar angkasa.
+ * Vanilla JavaScript, tanpa dependensi eksternal.
+ */
+(function () {
+  "use strict";
 
-const MAX_DIGITS = 15;
-const MAX_HISTORY = 30;
+  /* ========== 1. Konstanta ========== */
+  const MAX_DIGITS = 15;
+  const ERROR_TEXT = "ERROR";
+  const ERROR_MESSAGES = {
+    divideByZero: "Tidak bisa membagi dengan nol",
+    invalid: "Perhitungan tidak valid",
+  };
+  const OPERATOR_SYMBOL = { "+": "+", "-": "−", "*": "×", "/": "÷" };
 
-const state = {
-  current: "0",
-  previous: null,
-  operator: null,
-  overwriteNext: false,
-  memory: 0,
-};
+  /* ========== 2. Elemen DOM ========== */
+  const dom = {
+    screen: document.getElementById("screen"),
+    display: document.getElementById("display"),
+    secondary: document.getElementById("secondary"),
+    hint: document.getElementById("hint"),
+    keypad: document.getElementById("keypad"),
+    starsNear: document.getElementById("starsNear"),
+    starsFar: document.getElementById("starsFar"),
+    starsTwinkle: document.getElementById("starsTwinkle"),
+  };
 
-const history = [];
+  /* ========== 3. State ========== */
+  const state = {
+    current: "0",
+    previous: null,
+    operator: null,
+    overwriteNext: false,
+    error: null,
+    lastExpression: null,
+  };
 
-const OPERATOR_SYMBOL = {
-  "+": "+",
-  "-": "−",
-  "*": "×",
-  "/": "÷",
-  "**": "^(y)",
-};
+  /* ========== 4. Utilitas angka ========== */
 
-const UNARY_SYMBOL = {
-  sqrt: "√",
-  square: "x²",
-  sin: "sin",
-  cos: "cos",
-  tan: "tan",
-  log10: "log",
-  ln: "ln",
-};
-
-function format(value) {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return "Error";
-  if (num !== 0 && (Math.abs(num) >= 1e15 || Math.abs(num) < 1e-9)) {
-    return num.toExponential(6);
-  }
-  return String(Number(parseFloat(value).toFixed(10)));
-}
-
-function render() {
-  display.textContent = state.current;
-  display.classList.toggle("display--error", state.current === "Error");
-  memIndicator.hidden = state.memory === 0;
-
-  if (state.operator && state.previous !== null) {
-    subdisplay.textContent = `${state.previous} ${OPERATOR_SYMBOL[state.operator]}`;
-  } else {
-    subdisplay.textContent = "";
-  }
-}
-
-function renderHistory() {
-  historyList.textContent = "";
-  historyEmpty.hidden = history.length > 0;
-  historyClear.hidden = history.length === 0;
-
-  for (const entry of history) {
-    const item = document.createElement("li");
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "history__item";
-    button.dataset.value = entry.result;
-
-    const expression = document.createElement("span");
-    expression.textContent = entry.expression;
-
-    const result = document.createElement("b");
-    result.textContent = `= ${entry.result}`;
-
-    button.append(expression, result);
-    item.append(button);
-    historyList.append(item);
-  }
-}
-
-function addToHistory(expression, result) {
-  history.unshift({ expression, result });
-  if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
-  renderHistory();
-}
-
-function calculate() {
-  const a = parseFloat(state.previous);
-  const b = parseFloat(state.current);
-
-  let result;
-  switch (state.operator) {
-    case "+":
-      result = a + b;
-      break;
-    case "-":
-      result = a - b;
-      break;
-    case "*":
-      result = a * b;
-      break;
-    case "/":
-      if (b === 0) return "Error";
-      result = a / b;
-      break;
-    case "**":
-      result = Math.pow(a, b);
-      break;
-    default:
-      return state.current;
+  /**
+   * Membulatkan hasil floating point (mis. 0.1 + 0.2) tanpa membuat
+   * bilangan bulat besar kehilangan digit, dan menolak nilai tak hingga.
+   * Mengembalikan null bila hasil tidak valid.
+   */
+  function format(value) {
+    if (!Number.isFinite(value)) return null;
+    if (Number.isInteger(value) && Math.abs(value) < 1e21) {
+      return String(value === 0 ? 0 : value);
+    }
+    const rounded = Number(value.toPrecision(15));
+    if (rounded === 0) return "0";
+    return String(rounded);
   }
 
-  return Number.isFinite(result) ? format(result) : "Error";
-}
+  /** Menjalankan satu operasi. Mengembalikan { value } atau { error }. */
+  function compute(a, b, operator) {
+    let result;
 
-function inputDigit(digit) {
-  if (state.overwriteNext || state.current === "Error") {
-    state.current = digit;
-    state.overwriteNext = false;
-    return;
+    switch (operator) {
+      case "+":
+        result = a + b;
+        break;
+      case "-":
+        result = a - b;
+        break;
+      case "*":
+        result = a * b;
+        break;
+      case "/":
+        if (b === 0) return { error: ERROR_MESSAGES.divideByZero };
+        result = a / b;
+        break;
+      default:
+        return { error: ERROR_MESSAGES.invalid };
+    }
+
+    const value = format(result);
+    return value === null ? { error: ERROR_MESSAGES.invalid } : { value };
   }
-  if (state.current === "0") {
-    state.current = digit;
-    return;
+
+  /* ========== 5. Render ========== */
+  function render() {
+    dom.display.textContent = state.error ? ERROR_TEXT : state.current;
+    dom.screen.classList.toggle("screen--error", Boolean(state.error));
+
+    if (state.operator && state.previous !== null && !state.error) {
+      dom.secondary.textContent = `${state.previous} ${OPERATOR_SYMBOL[state.operator]}`;
+    } else {
+      dom.secondary.textContent = state.error ? "" : state.lastExpression || "";
+    }
+
+    dom.hint.textContent = state.error || "";
+    dom.hint.classList.toggle("hint--visible", Boolean(state.error));
   }
-  const digits = state.current.replace(/[^0-9]/g, "");
-  if (digits.length >= MAX_DIGITS) return;
-  state.current += digit;
-}
 
-function inputDot() {
-  if (state.overwriteNext || state.current === "Error") {
-    state.current = "0.";
-    state.overwriteNext = false;
-    return;
+  /* ========== 6. Aksi kalkulator ========== */
+  function clearError() {
+    state.error = null;
   }
-  if (!state.current.includes(".")) state.current += ".";
-}
 
-function inputSign() {
-  if (state.current === "0" || state.current === "Error") return;
-  state.current = state.current.startsWith("-")
-    ? state.current.slice(1)
-    : `-${state.current}`;
-}
-
-function inputPercent() {
-  if (state.current === "Error") return;
-  state.current = format(parseFloat(state.current) / 100);
-  state.overwriteNext = true;
-}
-
-function inputBackspace() {
-  if (state.overwriteNext || state.current === "Error") {
+  function resetAll() {
+    clearError();
     state.current = "0";
+    state.previous = null;
+    state.operator = null;
     state.overwriteNext = false;
-    return;
-  }
-  state.current = state.current.length > 1 ? state.current.slice(0, -1) : "0";
-  if (state.current === "-") state.current = "0";
-}
-
-function inputOperator(operator) {
-  if (state.current === "Error") return;
-
-  if (state.operator && state.previous !== null && !state.overwriteNext) {
-    const result = calculate();
-    state.current = result;
-    state.previous = result;
-  } else {
-    state.previous = state.current;
+    state.lastExpression = null;
   }
 
-  state.operator = operator;
-  state.overwriteNext = true;
-}
+  function fail(message) {
+    state.error = message;
+    state.previous = null;
+    state.operator = null;
+    state.overwriteNext = false;
+    state.lastExpression = null;
+  }
 
-function inputEquals() {
-  if (!state.operator || state.previous === null) return;
-
-  const expression = `${state.previous} ${OPERATOR_SYMBOL[state.operator]} ${state.current}`;
-  const result = calculate();
-  state.current = result;
-  state.previous = null;
-  state.operator = null;
-  state.overwriteNext = true;
-
-  addToHistory(expression, result);
-}
-
-function inputUnary(fn) {
-  if (state.current === "Error") return;
-
-  const x = parseFloat(state.current);
-  const toRad = (deg) => (deg * Math.PI) / 180;
-
-  let result;
-  switch (fn) {
-    case "sqrt":
-      if (x < 0) result = NaN;
-      else result = Math.sqrt(x);
-      break;
-    case "square":
-      result = x * x;
-      break;
-    case "sin":
-      result = Math.sin(toRad(x));
-      break;
-    case "cos":
-      result = Math.cos(toRad(x));
-      break;
-    case "tan":
-      result = Math.tan(toRad(x));
-      break;
-    case "log10":
-      result = x > 0 ? Math.log10(x) : NaN;
-      break;
-    case "ln":
-      result = x > 0 ? Math.log(x) : NaN;
-      break;
-    default:
+  function inputDigit(digit) {
+    if (state.error || state.overwriteNext) {
+      clearError();
+      state.current = digit;
+      state.overwriteNext = false;
       return;
+    }
+    if (state.current === "0") {
+      state.current = digit;
+      return;
+    }
+    if (countDigits(state.current) >= MAX_DIGITS) return;
+    state.current += digit;
   }
 
-  if (Number.isFinite(result)) {
-    addToHistory(`${UNARY_SYMBOL[fn]}(${state.current})`, format(result));
+  function inputDot() {
+    if (state.error || state.overwriteNext) {
+      clearError();
+      state.current = "0.";
+      state.overwriteNext = false;
+      return;
+    }
+    if (!state.current.includes(".")) state.current += ".";
   }
 
-  state.current = Number.isFinite(result) ? format(result) : "Error";
-  state.overwriteNext = true;
-}
-
-function inputMemory(action) {
-  if (action === "memory-clear") {
-    state.memory = 0;
-    return;
-  }
-  if (action === "memory-recall") {
-    if (state.memory === 0) return;
-    state.current = format(state.memory);
+  function inputPercent() {
+    if (state.error) return;
+    const value = format(parseFloat(state.current) / 100);
+    if (value === null) return fail(ERROR_MESSAGES.invalid);
+    state.current = value;
     state.overwriteNext = true;
-    return;
   }
 
-  if (state.current === "Error") return;
-  const delta = parseFloat(state.current);
-  state.memory =
-    action === "memory-add" ? state.memory + delta : state.memory - delta;
-  state.overwriteNext = true;
-}
-
-function useHistoryValue(value) {
-  if (value === "Error") return;
-  state.current = value;
-  state.previous = null;
-  state.operator = null;
-  state.overwriteNext = true;
-}
-
-function clearAll() {
-  state.current = "0";
-  state.previous = null;
-  state.operator = null;
-  state.overwriteNext = false;
-}
-
-function clearHistory() {
-  history.length = 0;
-  renderHistory();
-}
-
-const ACTIONS = {
-  digit: (el) => inputDigit(el.dataset.value),
-  dot: inputDot,
-  sign: inputSign,
-  percent: inputPercent,
-  backspace: inputBackspace,
-  clear: clearAll,
-  operator: (el) => inputOperator(el.dataset.value),
-  equals: inputEquals,
-  unary: (el) => inputUnary(el.dataset.value),
-  "memory-clear": () => inputMemory("memory-clear"),
-  "memory-recall": () => inputMemory("memory-recall"),
-  "memory-add": () => inputMemory("memory-add"),
-  "memory-sub": () => inputMemory("memory-sub"),
-};
-
-function press(action, el) {
-  ACTIONS[action]?.(el);
-  render();
-}
-
-keys.forEach((key) => {
-  key.addEventListener("click", () => press(key.dataset.action, key));
-});
-
-historyList.addEventListener("click", (event) => {
-  const item = event.target.closest(".history__item");
-  if (!item) return;
-  useHistoryValue(item.dataset.value);
-  render();
-});
-
-historyClear.addEventListener("click", clearHistory);
-
-const KEYBOARD_MAP = {
-  "+": { action: "operator", value: "+" },
-  "-": { action: "operator", value: "-" },
-  "*": { action: "operator", value: "*" },
-  x: { action: "operator", value: "*" },
-  X: { action: "operator", value: "*" },
-  "/": { action: "operator", value: "/" },
-  "^": { action: "operator", value: "**" },
-  ".": { action: "dot" },
-  ",": { action: "dot" },
-  "%": { action: "percent" },
-  r: { action: "unary", value: "sqrt" },
-  s: { action: "unary", value: "sin" },
-  c: { action: "unary", value: "cos" },
-  t: { action: "unary", value: "tan" },
-  g: { action: "unary", value: "log10" },
-  l: { action: "unary", value: "ln" },
-  Enter: { action: "equals" },
-  "=": { action: "equals" },
-  Escape: { action: "clear" },
-  Backspace: { action: "backspace" },
-};
-
-document.addEventListener("keydown", (event) => {
-  if (/^[0-9]$/.test(event.key)) {
-    press("digit", { dataset: { value: event.key } });
-    return;
+  function inputBackspace() {
+    clearError();
+    if (state.overwriteNext) {
+      state.current = "0";
+      state.overwriteNext = false;
+      return;
+    }
+    state.current = state.current.length > 1 ? state.current.slice(0, -1) : "0";
+    if (state.current === "-" || state.current === "") state.current = "0";
   }
 
-  const mapped = KEYBOARD_MAP[event.key];
-  if (mapped) {
+  function inputOperator(operator) {
+    if (state.error) {
+      clearError();
+      state.current = "0";
+      state.previous = null;
+      state.overwriteNext = false;
+    }
+
+    if (state.operator && state.previous !== null && !state.overwriteNext) {
+      const chained = compute(
+        parseFloat(state.previous),
+        parseFloat(state.current),
+        state.operator
+      );
+      if ("error" in chained) return fail(chained.error);
+      state.current = chained.value;
+      state.previous = chained.value;
+    } else {
+      state.previous = state.current;
+    }
+
+    state.operator = operator;
+    state.overwriteNext = true;
+  }
+
+  function inputEquals() {
+    if (state.error || !state.operator || state.previous === null) return;
+
+    const left = state.previous;
+    const right = state.current;
+    const result = compute(parseFloat(left), parseFloat(right), state.operator);
+
+    if ("error" in result) return fail(result.error);
+
+    state.lastExpression = `${left} ${OPERATOR_SYMBOL[state.operator]} ${right} =`;
+    state.current = result.value;
+    state.previous = null;
+    state.operator = null;
+    state.overwriteNext = true;
+  }
+
+  function countDigits(text) {
+    return text.replace(/[^0-9]/g, "").length;
+  }
+
+  /* ========== 7. Pengenbindingan input ========== */
+  const ACTIONS = {
+    digit: (value) => inputDigit(value),
+    dot: inputDot,
+    percent: inputPercent,
+    backspace: inputBackspace,
+    clear: resetAll,
+    operator: (value) => inputOperator(value),
+    equals: inputEquals,
+  };
+
+  function press(action, value) {
+    const handler = ACTIONS[action];
+    if (handler) handler(value);
+    render();
+  }
+
+  /** Efek tekan singkat, termasuk untuk input keyboard. */
+  function flash(action, value) {
+    const selector =
+      value === undefined
+        ? `.key[data-action="${action}"]`
+        : `.key[data-action="${action}"][data-value="${value}"]`;
+    const key = dom.keypad.querySelector(selector);
+    if (!key) return;
+
+    key.classList.add("is-hit");
+    window.setTimeout(() => key.classList.remove("is-hit"), 140);
+  }
+
+  dom.keypad.addEventListener("click", (event) => {
+    const key = event.target.closest(".key");
+    if (!key) return;
+    const { action, value } = key.dataset;
+    press(action, value);
+    flash(action, value);
+  });
+
+  const KEYBOARD_MAP = {
+    "+": ["operator", "+"],
+    "-": ["operator", "-"],
+    "*": ["operator", "*"],
+    x: ["operator", "*"],
+    X: ["operator", "*"],
+    "/": ["operator", "/"],
+    ".": ["dot"],
+    ",": ["dot"],
+    "%": ["percent"],
+    Backspace: ["backspace"],
+    Delete: ["clear"],
+    Escape: ["clear"],
+    c: ["clear"],
+    C: ["clear"],
+    Enter: ["equals"],
+    "=": ["equals"],
+  };
+
+  document.addEventListener("keydown", (event) => {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+    if (/^[0-9]$/.test(event.key)) {
+      press("digit", event.key);
+      flash("digit", event.key);
+      return;
+    }
+
+    const mapping = KEYBOARD_MAP[event.key];
+    if (!mapping) return;
+
     event.preventDefault();
-    press(mapped.action, { dataset: { value: mapped.value } });
-  }
-});
+    const [action, value] = mapping;
+    press(action, value);
+    flash(action, value);
+  });
 
-render();
-renderHistory();
+  /* ========== 8. bintang di latar ========== */
+  const STAR_FIELD = {
+    starsTwinkle: { count: 70, spread: 62, minAlpha: 0.35, maxAlpha: 1 },
+    starsNear: { count: 46, spread: 58, minAlpha: 0.3, maxAlpha: 0.85 },
+    starsFar: { count: 90, spread: 64, minAlpha: 0.12, maxAlpha: 0.45 },
+  };
+
+  const STAR_TINTS = ["255, 255, 255", "255, 255, 255", "186, 226, 255", "206, 186, 255"];
+
+  function buildStarField(element, config) {
+    if (!element) return;
+
+    const shadows = [];
+    for (let i = 0; i < config.count; i += 1) {
+      const x = (Math.random() * 2 - 1) * config.spread;
+      const y = (Math.random() * 2 - 1) * config.spread;
+      const blur = (Math.random() * 1.4 + 0.3).toFixed(2);
+      const alpha = (config.minAlpha + Math.random() * (config.maxAlpha - config.minAlpha)).toFixed(2);
+      const tint = STAR_TINTS[Math.floor(Math.random() * STAR_TINTS.length)];
+      shadows.push(`${x.toFixed(2)}vw ${y.toFixed(2)}vh 0 ${blur}px rgba(${tint}, ${alpha})`);
+    }
+
+    element.style.boxShadow = shadows.join(",");
+  }
+
+  /* ========== 9. Inisialisasi ========== */
+  buildStarField(dom.starsNear, STAR_FIELD.starsNear);
+  buildStarField(dom.starsFar, STAR_FIELD.starsFar);
+  buildStarField(dom.starsTwinkle, STAR_FIELD.starsTwinkle);
+  render();
+})();

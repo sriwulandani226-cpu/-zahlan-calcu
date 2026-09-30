@@ -2,217 +2,192 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kalkulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      name="description"
+      content="Space Calculator — Mission Control untuk menghitung angka di antara bintang."
+    />
+    <title>Space Calculator — Mission Control</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
+
   <body>
-    <main class="calculator" role="application" aria-label="Kalkulator ilmiah">
-      <h1 class="calculator__title">Kalkulator</h1>
+    <!-- Dekorasi latar: bintang, planet, bulan. Tidak mengganggu interaksi. -->
+    <div class="sky" aria-hidden="true">
+      <div class="nebula"></div>
+      <div class="stars stars--near" id="starsNear"></div>
+      <div class="stars stars--far" id="starsFar"></div>
+      <div class="stars stars--twinkle" id="starsTwinkle"></div>
+      <div class="planet planet--large"></div>
+      <div class="planet planet--small"></div>
+      <div class="orbit"></div>
+      <div class="moon"></div>
+    </div>
 
-      <section class="history" aria-label="Riwayat perhitungan">
-        <p id="history-empty" class="history__empty">Belum ada riwayat</p>
-        <ol id="history" class="history__list" reversed></ol>
-        <button type="button" id="history-clear" class="history__clear" hidden>
-          Hapus
-        </button>
-      </section>
-
-      <div class="readout">
-        <span id="mem-indicator" class="readout__mem" hidden>M</span>
-        <div class="readout__stack">
-          <p id="subdisplay" class="subdisplay" aria-hidden="true"></p>
-          <output id="display" class="display" aria-live="polite">0</output>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <svg
+            class="brand__mark"
+            viewBox="0 0 48 48"
+            role="img"
+            aria-label="Logo planet"
+          >
+            <defs>
+              <linearGradient id="brandGradient" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#22e0ff" />
+                <stop offset="55%" stop-color="#4d7cff" />
+                <stop offset="100%" stop-color="#a855f7" />
+              </linearGradient>
+            </defs>
+            <circle cx="24" cy="24" r="9" fill="url(#brandGradient)" />
+            <ellipse
+              cx="24"
+              cy="24"
+              rx="20"
+              ry="7"
+              fill="none"
+              stroke="url(#brandGradient)"
+              stroke-width="2"
+              transform="rotate(-22 24 24)"
+            />
+            <circle cx="40" cy="16" r="2.4" fill="#22e0ff" />
+          </svg>
+          <span class="brand__name">SPACE CALCULATOR</span>
         </div>
-      </div>
 
-      <div class="memory" role="group" aria-label="Memori">
-        <button type="button" class="key key--mem" data-action="memory-clear">MC</button>
-        <button type="button" class="key key--mem" data-action="memory-recall">MR</button>
-        <button type="button" class="key key--mem" data-action="memory-add">M+</button>
-        <button type="button" class="key key--mem" data-action="memory-sub">M−</button>
-      </div>
+        <p class="status">
+          <span class="status__dot"></span>
+          SYSTEM ONLINE
+        </p>
+      </header>
 
-      <div class="keypad">
-        <button
-          type="button"
-          class="key key--sci"
-          data-action="unary"
-          data-value="sqrt"
-          aria-label="Akar kuadrat"
-        >
-          &radic;
-        </button>
-        <button
-          type="button"
-          class="key key--sci"
-          data-action="unary"
-          data-value="square"
-          aria-label="Pangkat dua"
-        >
-          x<sup>2</sup>
-        </button>
-        <button
-          type="button"
-          class="key key--sci"
-          data-action="operator"
-          data-value="**"
-          aria-label="Pangkat"
-        >
-          x<sup>y</sup>
-        </button>
-        <button
-          type="button"
-          class="key key--op"
-          data-action="operator"
-          data-value="/"
-          aria-label="Bagi"
-        >
-          &divide;
-        </button>
+      <main class="stage">
+        <section class="console" aria-label="Kalkulator">
+          <i class="corner corner--tl"></i>
+          <i class="corner corner--tr"></i>
+          <i class="corner corner--bl"></i>
+          <i class="corner corner--br"></i>
 
-        <button
-          type="button"
-          class="key key--sci"
-          data-action="unary"
-          data-value="sin"
-          aria-label="Sinus (derajat)"
-        >
-          sin
-        </button>
-        <button
-          type="button"
-          class="key key--sci"
-          data-action="unary"
-          data-value="cos"
-          aria-label="Cosinus (derajat)"
-        >
-          cos
-        </button>
-        <button
-          type="button"
-          class="key key--sci"
-          data-action="unary"
-          data-value="tan"
-          aria-label="Tangens (derajat)"
-        >
-          tan
-        </button>
-        <button
-          type="button"
-          class="key key--op"
-          data-action="operator"
-          data-value="*"
-          aria-label="Kali"
-        >
-          &times;
-        </button>
+          <p class="console__label">
+            MISSION CONTROL <span aria-hidden="true">//</span> CALC-01
+          </p>
 
-        <button
-          type="button"
-          class="key key--sci"
-          data-action="unary"
-          data-value="log10"
-          aria-label="Logaritma basis 10"
-        >
-          log
-        </button>
-        <button
-          type="button"
-          class="key key--sci"
-          data-action="unary"
-          data-value="ln"
-          aria-label="Logaritma natural"
-        >
-          ln
-        </button>
-        <button
-          type="button"
-          class="key key--fn"
-          data-action="percent"
-          aria-label="Persen"
-        >
-          %
-        </button>
-        <button
-          type="button"
-          class="key key--op"
-          data-action="operator"
-          data-value="-"
-          aria-label="Kurang"
-        >
-          &minus;
-        </button>
+          <div class="screen" id="screen">
+            <p id="secondary" class="screen__secondary" aria-hidden="true"></p>
+            <output id="display" class="screen__value" aria-live="polite">0</output>
+          </div>
 
-        <button type="button" class="key" data-action="digit" data-value="7">7</button>
-        <button type="button" class="key" data-action="digit" data-value="8">8</button>
-        <button type="button" class="key" data-action="digit" data-value="9">9</button>
-        <button
-          type="button"
-          class="key key--op"
-          data-action="operator"
-          data-value="+"
-          aria-label="Tambah"
-        >
-          +
-        </button>
+          <p id="hint" class="hint"></p>
 
-        <button type="button" class="key" data-action="digit" data-value="4">4</button>
-        <button type="button" class="key" data-action="digit" data-value="5">5</button>
-        <button type="button" class="key" data-action="digit" data-value="6">6</button>
-        <button
-          type="button"
-          class="key key--eq"
-          data-action="equals"
-          aria-label="Sama dengan"
-        >
-          =
-        </button>
+          <div class="keypad" id="keypad">
+            <button type="button" class="key key--fn" data-action="clear">C</button>
+            <button
+              type="button"
+              class="key key--fn"
+              data-action="backspace"
+              aria-label="Hapus satu karakter"
+            >
+              &#9003;
+            </button>
+            <button
+              type="button"
+              class="key key--fn"
+              data-action="percent"
+              aria-label="Persen"
+            >
+              %
+            </button>
+            <button
+              type="button"
+              class="key key--op"
+              data-action="operator"
+              data-value="/"
+              aria-label="Bagi"
+            >
+              &divide;
+            </button>
 
-        <button type="button" class="key" data-action="digit" data-value="1">1</button>
-        <button type="button" class="key" data-action="digit" data-value="2">2</button>
-        <button type="button" class="key" data-action="digit" data-value="3">3</button>
+            <button type="button" class="key" data-action="digit" data-value="7">7</button>
+            <button type="button" class="key" data-action="digit" data-value="8">8</button>
+            <button type="button" class="key" data-action="digit" data-value="9">9</button>
+            <button
+              type="button"
+              class="key key--op"
+              data-action="operator"
+              data-value="*"
+              aria-label="Kali"
+            >
+              &times;
+            </button>
 
-        <button type="button" class="key key--fn" data-action="clear">AC</button>
-        <button
-          type="button"
-          class="key key--fn"
-          data-action="sign"
-          aria-label="Ubah tanda"
-        >
-          +/−
-        </button>
-        <button
-          type="button"
-          class="key key--fn"
-          data-action="backspace"
-          aria-label="Hapus satu angka"
-        >
-          DEL
-        </button>
+            <button type="button" class="key" data-action="digit" data-value="4">4</button>
+            <button type="button" class="key" data-action="digit" data-value="5">5</button>
+            <button type="button" class="key" data-action="digit" data-value="6">6</button>
+            <button
+              type="button"
+              class="key key--op"
+              data-action="operator"
+              data-value="-"
+              aria-label="Kurang"
+            >
+              &minus;
+            </button>
 
-        <button type="button" class="key key--zero" data-action="digit" data-value="0">
-          0
-        </button>
-        <button
-          type="button"
-          class="key"
-          data-action="dot"
-          aria-label="Koma desimal"
-        >
-          .
-        </button>
-      </div>
+            <button type="button" class="key" data-action="digit" data-value="1">1</button>
+            <button type="button" class="key" data-action="digit" data-value="2">2</button>
+            <button type="button" class="key" data-action="digit" data-value="3">3</button>
+            <button
+              type="button"
+              class="key key--op"
+              data-action="operator"
+              data-value="+"
+              aria-label="Tambah"
+            >
+              +
+            </button>
 
-      <p class="hint">
-        <span>sin/cos/tan memakai derajat &middot; klik riwayat untuk memakai ulang</span>
-        <span
-          >Keyboard: angka, <kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd>,
-          <kbd>%</kbd> <kbd>.</kbd> &rarr; Enter &middot; <kbd>Backspace</kbd> &middot;
-          <kbd>Esc</kbd></span
-        >
-      </p>
-    </main>
+            <button type="button" class="key key--zero" data-action="digit" data-value="0">
+              0
+            </button>
+            <button
+              type="button"
+              class="key"
+              data-action="dot"
+              aria-label="Koma desimal"
+            >
+              .
+            </button>
+            <button
+              type="button"
+              class="key key--eq"
+              data-action="equals"
+              aria-label="Sama dengan"
+            >
+              =
+            </button>
+          </div>
+
+          <p class="console__note">
+            Keyboard: angka, <kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd>
+            <kbd>.</kbd> &middot; <kbd>Enter</kbd> = &middot; <kbd>Esc</kbd> C
+            &middot; <kbd>Backspace</kbd>
+          </p>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Exploring numbers across the universe &#128640;
+      </footer>
+    </div>
 
     <script src="app.js"></script>
   </body>
