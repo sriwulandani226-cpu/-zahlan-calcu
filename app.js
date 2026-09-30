@@ -1,8 +1,12 @@
 const display = document.getElementById("display");
 const subdisplay = document.getElementById("subdisplay");
+const historyList = document.getElementById("history");
+const historyEmpty = document.getElementById("history-empty");
+const historyClear = document.getElementById("history-clear");
 const keys = document.querySelectorAll(".key");
 
 const MAX_DIGITS = 15;
+const MAX_HISTORY = 30;
 
 const state = {
   current: "0",
@@ -10,6 +14,8 @@ const state = {
   operator: null,
   overwriteNext: false,
 };
+
+const history = [];
 
 const OPERATOR_SYMBOL = { "+": "+", "-": "−", "*": "×", "/": "÷" };
 
@@ -31,6 +37,32 @@ function render() {
   } else {
     subdisplay.textContent = "";
   }
+}
+
+function renderHistory() {
+  historyList.textContent = "";
+  historyEmpty.hidden = history.length > 0;
+  historyClear.hidden = history.length === 0;
+
+  for (const entry of history) {
+    const item = document.createElement("li");
+    item.className = "history__item";
+
+    const expression = document.createElement("span");
+    expression.textContent = entry.expression;
+
+    const result = document.createElement("b");
+    result.textContent = `= ${entry.result}`;
+
+    item.append(expression, result);
+    historyList.append(item);
+  }
+}
+
+function addToHistory(expression, result) {
+  history.unshift({ expression, result });
+  if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+  renderHistory();
 }
 
 function calculate() {
@@ -123,10 +155,15 @@ function inputOperator(operator) {
 
 function inputEquals() {
   if (!state.operator || state.previous === null) return;
-  state.current = calculate();
+
+  const expression = `${state.previous} ${OPERATOR_SYMBOL[state.operator]} ${state.current}`;
+  const result = calculate();
+  state.current = result;
   state.previous = null;
   state.operator = null;
   state.overwriteNext = true;
+
+  addToHistory(expression, result);
 }
 
 function clearAll() {
@@ -134,6 +171,11 @@ function clearAll() {
   state.previous = null;
   state.operator = null;
   state.overwriteNext = false;
+}
+
+function clearHistory() {
+  history.length = 0;
+  renderHistory();
 }
 
 const ACTIONS = {
@@ -155,6 +197,8 @@ function press(action, el) {
 keys.forEach((key) => {
   key.addEventListener("click", () => press(key.dataset.action, key));
 });
+
+historyClear.addEventListener("click", clearHistory);
 
 const KEYBOARD_MAP = {
   "+": { action: "operator", value: "+" },
@@ -188,3 +232,4 @@ document.addEventListener("keydown", (event) => {
 });
 
 render();
+renderHistory();

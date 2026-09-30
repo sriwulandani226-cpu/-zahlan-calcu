@@ -10,11 +10,27 @@
     <main class="calculator" role="application" aria-label="Kalkulator">
       <h1 class="calculator__title">Kalkulator</h1>
 
+      <section class="history" aria-label="Riwayat perhitungan">
+        <ol id="history" class="history__list" reversed></ol>
+        <p id="history-empty" class="history__empty">Belum ada riwayat</p>
+        <button type="button" id="history-clear" class="history__clear" hidden>
+          Hapus riwayat
+        </button>
+      </section>
+
       <output id="display" class="display" aria-live="polite">0</output>
       <p id="subdisplay" class="subdisplay" aria-hidden="true"></p>
 
       <div class="keypad">
         <button type="button" class="key key--fn" data-action="clear">AC</button>
+        <button
+          type="button"
+          class="key key--fn"
+          data-action="backspace"
+          aria-label="Hapus satu angka"
+        >
+          DEL
+        </button>
         <button
           type="button"
           class="key key--fn"
@@ -31,6 +47,10 @@
         >
           %
         </button>
+
+        <button type="button" class="key" data-action="digit" data-value="7">7</button>
+        <button type="button" class="key" data-action="digit" data-value="8">8</button>
+        <button type="button" class="key" data-action="digit" data-value="9">9</button>
         <button
           type="button"
           class="key key--op"
@@ -41,9 +61,9 @@
           &divide;
         </button>
 
-        <button type="button" class="key" data-action="digit" data-value="7">7</button>
-        <button type="button" class="key" data-action="digit" data-value="8">8</button>
-        <button type="button" class="key" data-action="digit" data-value="9">9</button>
+        <button type="button" class="key" data-action="digit" data-value="4">4</button>
+        <button type="button" class="key" data-action="digit" data-value="5">5</button>
+        <button type="button" class="key" data-action="digit" data-value="6">6</button>
         <button
           type="button"
           class="key key--op"
@@ -54,9 +74,9 @@
           &times;
         </button>
 
-        <button type="button" class="key" data-action="digit" data-value="4">4</button>
-        <button type="button" class="key" data-action="digit" data-value="5">5</button>
-        <button type="button" class="key" data-action="digit" data-value="6">6</button>
+        <button type="button" class="key" data-action="digit" data-value="1">1</button>
+        <button type="button" class="key" data-action="digit" data-value="2">2</button>
+        <button type="button" class="key" data-action="digit" data-value="3">3</button>
         <button
           type="button"
           class="key key--op"
@@ -67,9 +87,17 @@
           &minus;
         </button>
 
-        <button type="button" class="key" data-action="digit" data-value="1">1</button>
-        <button type="button" class="key" data-action="digit" data-value="2">2</button>
-        <button type="button" class="key" data-action="digit" data-value="3">3</button>
+        <button type="button" class="key key--zero" data-action="digit" data-value="0">
+          0
+        </button>
+        <button
+          type="button"
+          class="key"
+          data-action="dot"
+          aria-label="Koma desimal"
+        >
+          .
+        </button>
         <button
           type="button"
           class="key key--op"
@@ -80,17 +108,6 @@
           +
         </button>
 
-        <button type="button" class="key key--zero" data-action="digit" data-value="0">
-          0
-        </button>
-        <button
-          type="button"
-          class="key key--dot"
-          data-action="dot"
-          aria-label="Koma desimal"
-        >
-          .
-        </button>
         <button
           type="button"
           class="key key--eq"
@@ -100,6 +117,12 @@
           =
         </button>
       </div>
+
+      <p class="hint">
+        Keyboard: angka, <kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd>,
+        <kbd>%</kbd> <kbd>.</kbd> &rarr; Enter &middot; <kbd>Backspace</kbd> &middot;
+        <kbd>Esc</kbd>
+      </p>
     </main>
 
     <script src="app.js"></script>
