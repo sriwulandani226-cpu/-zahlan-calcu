@@ -1,0 +1,133 @@
+:root {
+  --bg: #0f1115;
+  --panel: #181b22;
+  --key: #262a33;
+  --key-hover: #30353f;
+  --key-fn: #3a3f4a;
+  --key-op: #ff9f0a;
+  --key-op-hover: #ffb340;
+  --text: #f5f6f8;
+  --text-dim: #8b93a1;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+.calculator {
+  width: 100%;
+  max-width: 340px;
+  padding: 24px;
+  border-radius: 24px;
+  background: var(--panel);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+}
+
+.calculator__title {
+  margin-bottom: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.display {
+  display: block;
+  padding: 12px 4px 4px;
+  font-size: clamp(2.2rem, 12vw, 3rem);
+  font-weight: 300;
+  line-height: 1.1;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.display--error {
+  color: #ff6b6b;
+}
+
+.subdisplay {
+  min-height: 1.2rem;
+  padding: 0 4px 12px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.key {
+  aspect-ratio: 1 / 1;
+  border: 0;
+  border-radius: 16px;
+  background: var(--key);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 1.35rem;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.key:hover {
+  background: var(--key-hover);
+}
+
+.key:active {
+  transform: scale(0.95);
+}
+
+.key:focus-visible {
+  outline: 2px solid var(--key-op);
+  outline-offset: 2px;
+}
+
+.key--fn {
+  background: var(--key-fn);
+  font-size: 1.1rem;
+}
+
+.key--fn:hover {
+  background: #454b57;
+}
+
+.key--op {
+  background: var(--key-op);
+  font-size: 1.6rem;
+}
+
+.key--op:hover {
+  background: var(--key-op-hover);
+}
+
+.key--eq {
+  background: var(--key-op);
+  font-size: 1.6rem;
+}
+
+.key--eq:hover {
+  background: var(--key-op-hover);
+}
+
+.key--zero {
+  grid-column: span 2;
+  aspect-ratio: auto;
+}

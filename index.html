@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kalkulator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="calculator" role="application" aria-label="Kalkulator">
+      <h1 class="calculator__title">Kalkulator</h1>
+
+      <output id="display" class="display" aria-live="polite">0</output>
+      <p id="subdisplay" class="subdisplay" aria-hidden="true"></p>
+
+      <div class="keypad">
+        <button type="button" class="key key--fn" data-action="clear">AC</button>
+        <button
+          type="button"
+          class="key key--fn"
+          data-action="sign"
+          aria-label="Ubah tanda"
+        >
+          +/-
+        </button>
+        <button
+          type="button"
+          class="key key--fn"
+          data-action="percent"
+          aria-label="Persen"
+        >
+          %
+        </button>
+        <button
+          type="button"
+          class="key key--op"
+          data-action="operator"
+          data-value="/"
+          aria-label="Bagi"
+        >
+          &divide;
+        </button>
+
+        <button type="button" class="key" data-action="digit" data-value="7">7</button>
+        <button type="button" class="key" data-action="digit" data-value="8">8</button>
+        <button type="button" class="key" data-action="digit" data-value="9">9</button>
+        <button
+          type="button"
+          class="key key--op"
+          data-action="operator"
+          data-value="*"
+          aria-label="Kali"
+        >
+          &times;
+        </button>
+
+        <button type="button" class="key" data-action="digit" data-value="4">4</button>
+        <button type="button" class="key" data-action="digit" data-value="5">5</button>
+        <button type="button" class="key" data-action="digit" data-value="6">6</button>
+        <button
+          type="button"
+          class="key key--op"
+          data-action="operator"
+          data-value="-"
+          aria-label="Kurang"
+        >
+          &minus;
+        </button>
+
+        <button type="button" class="key" data-action="digit" data-value="1">1</button>
+        <button type="button" class="key" data-action="digit" data-value="2">2</button>
+        <button type="button" class="key" data-action="digit" data-value="3">3</button>
+        <button
+          type="button"
+          class="key key--op"
+          data-action="operator"
+          data-value="+"
+          aria-label="Tambah"
+        >
+          +
+        </button>
+
+        <button type="button" class="key key--zero" data-action="digit" data-value="0">
+          0
+        </button>
+        <button
+          type="button"
+          class="key key--dot"
+          data-action="dot"
+          aria-label="Koma desimal"
+        >
+          .
+        </button>
+        <button
+          type="button"
+          class="key key--eq"
+          data-action="equals"
+          aria-label="Sama dengan"
+        >
+          =
+        </button>
+      </div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
